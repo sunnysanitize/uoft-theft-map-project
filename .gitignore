@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.pyc
+backend/.venv/
+
+# Generated backend data
+backend/data/thefts.db
+
+# Next.js build artifacts
+frontend/.next/
+
+# macOS
+.DS_Store
