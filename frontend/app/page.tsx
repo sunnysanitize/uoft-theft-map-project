@@ -12,11 +12,28 @@ type TheftPoint = {
 };
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
+const KINGS_COLLEGE_CIRCLE = {
+  lat: 43.66058,
+  lng: -79.39529,
+};
+const BASE_CAMPUS_SPAN = {
+  lat: 43.6680 - 43.6574,
+  lng: -79.3956 - -79.4072,
+};
+const ZOOM_OUT_FACTOR = 1.55;
+const CAMPUS_SPAN = {
+  lat: BASE_CAMPUS_SPAN.lat * ZOOM_OUT_FACTOR,
+  lng: BASE_CAMPUS_SPAN.lng * ZOOM_OUT_FACTOR,
+};
+const COORDINATE_NUDGE = {
+  lat: -0.0002,
+  lng: -0.00025,
+};
 const CAMPUS_BOUNDS = {
-  minLat: 43.6574,
-  maxLat: 43.6680,
-  minLng: -79.4072,
-  maxLng: -79.3956,
+  minLat: KINGS_COLLEGE_CIRCLE.lat - CAMPUS_SPAN.lat / 2,
+  maxLat: KINGS_COLLEGE_CIRCLE.lat + CAMPUS_SPAN.lat / 2,
+  minLng: KINGS_COLLEGE_CIRCLE.lng - CAMPUS_SPAN.lng / 2,
+  maxLng: KINGS_COLLEGE_CIRCLE.lng + CAMPUS_SPAN.lng / 2,
 };
 
 const OSM_EMBED = `https://www.openstreetmap.org/export/embed.html?bbox=${CAMPUS_BOUNDS.minLng}%2C${CAMPUS_BOUNDS.minLat}%2C${CAMPUS_BOUNDS.maxLng}%2C${CAMPUS_BOUNDS.maxLat}&layer=mapnik`;
@@ -86,6 +103,10 @@ function HeatmapCanvas({ points }: { points: TheftPoint[] }) {
         className="pointer-events-none absolute inset-0 h-full w-full"
         loading="lazy"
         referrerPolicy="no-referrer-when-downgrade"
+      />
+      <div
+        className="pointer-events-none absolute left-2 top-2 z-20 h-20 w-10 rounded bg-white/95"
+        aria-hidden="true"
       />
       <canvas
         ref={canvasRef}
@@ -169,10 +190,21 @@ export default function Home() {
     };
   }, [points]);
 
+  const shiftedPoints = useMemo(() => {
+    if (!center) return points;
+    const latOffset = KINGS_COLLEGE_CIRCLE.lat - center.lat + COORDINATE_NUDGE.lat;
+    const lngOffset = KINGS_COLLEGE_CIRCLE.lng - center.lng + COORDINATE_NUDGE.lng;
+    return points.map((point) => ({
+      ...point,
+      lat: point.lat + latOffset,
+      lng: point.lng + lngOffset,
+    }));
+  }, [center, points]);
+
   return (
     <main className="min-h-screen bg-slate-100 px-6 py-10 text-slate-900">
       <div className="mx-auto max-w-5xl rounded-2xl border border-slate-300 bg-white p-8 shadow-sm">
-        <h1 className="text-3xl font-bold">UofT St. George Theft Map</h1>
+        <h1 className="text-3xl font-bold">Police Database Thefts Over $5,000 (UofT St. George)</h1>
         <p className="mt-2 text-slate-600">
           Map area is fixed to St. George campus. Theft points come from backend CSV filtering.
         </p>
@@ -187,11 +219,11 @@ export default function Home() {
           </div>
           <div className="rounded-xl border border-slate-300 p-4">
             <p className="text-sm uppercase tracking-wide text-slate-500">Center latitude</p>
-            <p className="mt-2 text-2xl font-semibold">{center ? center.lat.toFixed(6) : "-"}</p>
+            <p className="mt-2 text-2xl font-semibold">{KINGS_COLLEGE_CIRCLE.lat.toFixed(6)}</p>
           </div>
           <div className="rounded-xl border border-slate-300 p-4">
             <p className="text-sm uppercase tracking-wide text-slate-500">Center longitude</p>
-            <p className="mt-2 text-2xl font-semibold">{center ? center.lng.toFixed(6) : "-"}</p>
+            <p className="mt-2 text-2xl font-semibold">{KINGS_COLLEGE_CIRCLE.lng.toFixed(6)}</p>
           </div>
         </section>
 
@@ -207,7 +239,7 @@ export default function Home() {
             Theft density is drawn directly on top of the map using the same campus bounds.
           </p>
           <div className="mt-4">
-            <HeatmapCanvas points={points} />
+            <HeatmapCanvas points={shiftedPoints} />
           </div>
           <p className="mt-2 text-sm text-slate-500">
             If the map is blank, verify internet access in your browser and disable strict tracker-blocking for
@@ -229,7 +261,7 @@ export default function Home() {
                 </tr>
               </thead>
               <tbody>
-                {points.slice(0, 12).map((point) => (
+                {shiftedPoints.slice(0, 12).map((point) => (
                   <tr className="border-t border-slate-100" key={point.event_unique_id}>
                     <td className="px-3 py-2">{point.occ_date ?? "-"}</td>
                     <td className="px-3 py-2">{point.offence ?? "-"}</td>

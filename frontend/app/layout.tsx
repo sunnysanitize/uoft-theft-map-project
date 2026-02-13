@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "UofT Theft Heatmap by Sunny",
+  title: "Police Database Thefts Over $5,000 (UofT St. George)",
   description: "",
 };
 
