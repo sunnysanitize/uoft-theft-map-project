@@ -13,7 +13,7 @@ if str(BASE_DIR) not in sys.path:
 from app.models import TheftPoint
 from app.services import replace_thefts
 
-# Tighter polygon around core UofT St. George campus
+# Tighter polygon around core of UTSG
 # Stored as (longitude, latitude)
 ST_GEORGE_POLYGON = [
     (-79.4068, 43.6615),
