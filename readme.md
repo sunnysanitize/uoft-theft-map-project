@@ -4,7 +4,7 @@ This project now has a minimal full-stack setup:
 
 - `backend/scripts/ingest_data.py`: reads Toronto theft CSV and keeps only incidents inside an approximate UofT St. George campus polygon.
 - `backend/app/main.py`: FastAPI server exposing `GET /thefts` for the filtered records.
-- `frontend/app/page.tsx`: basic UI that fetches the filtered data and displays counts/sample points.
+- `frontend/app/page.tsx`: UI that fetches live backend data and falls back to `frontend/public/thefts.json` when backend is unavailable.
 
 ## Run backend
 
@@ -16,6 +16,11 @@ pip install -r requirements.txt
 python scripts/ingest_data.py
 uvicorn app.main:app --reload
 ```
+
+`python scripts/ingest_data.py` now writes both:
+
+- `backend/data/thefts.db` for FastAPI
+- `frontend/public/thefts.json` as a frontend fallback dataset
 
 ## Run frontend
 
@@ -29,6 +34,12 @@ If your API is not at `http://localhost:8000`, set:
 
 ```bash
 NEXT_PUBLIC_API_BASE=http://your-host:your-port
+```
+
+If your shell prompt is stuck in the virtualenv, run:
+
+```bash
+deactivate
 ```
 
 ## Notes

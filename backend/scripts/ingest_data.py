@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import json
 import sys
 from pathlib import Path
 
@@ -12,8 +13,8 @@ if str(BASE_DIR) not in sys.path:
 from app.models import TheftPoint
 from app.services import replace_thefts
 
-# Approximate polygon around UofT St. George Campus.
-# Stored as (longitude, latitude) tuples.
+# Approximate polygon around UTSG
+# Stored as (longitude, latitude)
 ST_GEORGE_POLYGON = [
     (-79.4098, 43.6631),
     (-79.4056, 43.6699),
@@ -23,6 +24,7 @@ ST_GEORGE_POLYGON = [
     (-79.3980, 43.6548),
     (-79.4068, 43.6551),
 ]
+FRONTEND_DATA_PATH = BASE_DIR.parent / "frontend" / "public" / "thefts.json"
 
 
 def point_in_polygon(lat: float, lng: float, polygon: list[tuple[float, float]]) -> bool:
@@ -83,9 +85,17 @@ def load_and_filter() -> list[TheftPoint]:
     return points
 
 
+def export_frontend_json(points: list[TheftPoint]) -> None:
+    FRONTEND_DATA_PATH.parent.mkdir(parents=True, exist_ok=True)
+    payload = [point.model_dump() for point in points]
+    with FRONTEND_DATA_PATH.open("w", encoding="utf-8") as output:
+        json.dump(payload, output, ensure_ascii=True)
+
+
 def main() -> None:
     points = load_and_filter()
     total = replace_thefts(points)
+    export_frontend_json(points)
     print(f"Loaded {total} St. George theft records into SQLite.")
 
 
