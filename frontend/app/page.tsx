@@ -11,7 +11,6 @@ type TheftPoint = {
   lng: number;
 };
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
 const KINGS_COLLEGE_CIRCLE = {
   lat: 43.66058,
   lng: -79.39529,
@@ -120,58 +119,20 @@ function HeatmapCanvas({ points }: { points: TheftPoint[] }) {
 export default function Home() {
   const [points, setPoints] = useState<TheftPoint[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [source, setSource] = useState<"api" | "static" | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
-      const loadStatic = async (reason: string) => {
-        const staticResponse = await fetch("/thefts.json");
-        if (staticResponse.ok) {
-          const staticData: TheftPoint[] = await staticResponse.json();
-          setPoints(staticData);
-          setSource("static");
-          setError(reason);
-          return true;
-        }
-        return false;
-      };
-
       try {
-        const apiResponse = await fetch(`${API_BASE}/thefts?limit=10000`);
-        if (apiResponse.ok) {
-          const apiData: TheftPoint[] = await apiResponse.json();
-          setPoints(apiData);
-          setSource("api");
-          return;
-        }
-
-        const loadedStatic = await loadStatic(
-          `Live backend unreachable at ${API_BASE}. Showing last ingested static data from /thefts.json.`
-        );
-        if (loadedStatic) return;
-
-        setPoints([]);
-        setSource(null);
-        setError(
-          `Could not load live backend (${API_BASE}) or static fallback (/thefts.json). Run: python backend/scripts/ingest_data.py`
-        );
+        const response = await fetch("/thefts.json");
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const staticData: TheftPoint[] = await response.json();
+        setPoints(staticData);
+        setError(null);
       } catch (err) {
-        const loadedStatic = await loadStatic(
-          `Live backend request failed at ${API_BASE}. Showing last ingested static data from /thefts.json.`
-        );
-        if (loadedStatic) {
-          setLoading(false);
-          return;
-        }
-
         setPoints([]);
-        setSource(null);
-        const message =
-          err instanceof Error
-            ? err.message
-            : "Network error while loading theft data. Ensure frontend is running on localhost.";
-        setError(message);
+        const message = err instanceof Error ? err.message : "Unknown error while loading static theft data.";
+        setError(`Could not load /thefts.json (${message}). Run: python backend/scripts/ingest_data.py`);
       } finally {
         setLoading(false);
       }
@@ -208,9 +169,7 @@ export default function Home() {
         <p className="mt-2 text-slate-600">
           Map area is fixed to St. George campus. Theft points come from backend CSV filtering.
         </p>
-        <p className="mt-1 text-sm text-slate-500">
-          Data source: {loading ? "loading..." : source === "api" ? "live backend" : "static fallback"}
-        </p>
+        <p className="mt-1 text-sm text-slate-500">Data source: {loading ? "loading..." : "static /thefts.json"}</p>
 
         <section className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div className="rounded-xl bg-slate-900 p-4 text-white">
