@@ -13,16 +13,16 @@ if str(BASE_DIR) not in sys.path:
 from app.models import TheftPoint
 from app.services import replace_thefts
 
-# Approximate polygon around UTSG
+# Tighter polygon around core UofT St. George campus
 # Stored as (longitude, latitude)
 ST_GEORGE_POLYGON = [
-    (-79.4098, 43.6631),
-    (-79.4056, 43.6699),
-    (-79.3988, 43.6703),
-    (-79.3930, 43.6675),
-    (-79.3925, 43.6603),
-    (-79.3980, 43.6548),
-    (-79.4068, 43.6551),
+    (-79.4068, 43.6615),
+    (-79.4048, 43.6671),
+    (-79.3982, 43.6678),
+    (-79.3961, 43.6654),
+    (-79.3965, 43.6590),
+    (-79.4010, 43.6576),
+    (-79.4057, 43.6582),
 ]
 FRONTEND_DATA_PATH = BASE_DIR.parent / "frontend" / "public" / "thefts.json"
 
